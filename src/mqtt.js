@@ -240,12 +240,19 @@ const purgeTextMessagesAfterSeconds = options["purge-text-messages-after-seconds
 const purgeTraceroutesAfterSeconds = options["purge-traceroutes-after-seconds"] ?? null;
 const purgeWaypointsAfterSeconds = options["purge-waypoints-after-seconds"] ?? null;
 
-// create mqtt client
-const client = mqtt.connect(mqttBrokerUrl, {
-    username: mqttUsername,
-    password: mqttPassword,
-    clientId: mqttClientId,
-});
+
+let client;
+try {
+    // create mqtt client
+    console.log("Connecting with: ", mqttBrokerUrl, mqttUsername, mqttPassword, mqttClientId)
+    client = mqtt.connect(mqttBrokerUrl, {
+        username: mqttUsername,
+        password: mqttPassword,
+        clientId: mqttClientId,
+    });
+} catch (e) {
+    console.log(e)
+}
 
 // load protobufs
 const root = new protobufjs.Root();
@@ -704,7 +711,6 @@ client.on("message", async (topic, message) => {
                 envelope.packet.decoded = decoded;
             }
         }
-
         // get portnum from decoded packet
         const portnum = envelope.packet?.decoded?.portnum;
 
@@ -774,7 +780,7 @@ client.on("message", async (topic, message) => {
             // don't care if updating mqtt timestamp fails
         }
 
-        const logKnownPacketTypes = false;
+        const logKnownPacketTypes = true;
 
         // if allowed portnums are configured, ignore portnums that are not in the list
         if(allowedPortnums != null && !allowedPortnums.includes(portnum)){
@@ -825,7 +831,8 @@ client.on("message", async (topic, message) => {
         else if(portnum === 3) {
 
             const position = Position.decode(envelope.packet.decoded.payload);
-
+            console.log("got envleope : ", envelope);
+            console.log("got ", position);
             if(logKnownPacketTypes){
                 console.log("POSITION_APP", {
                     from: envelope.packet.from.toString(16),
@@ -1386,5 +1393,6 @@ client.on("message", async (topic, message) => {
 
     } catch(e) {
         // ignore errors
+        // console.log(e)
     }
 });
