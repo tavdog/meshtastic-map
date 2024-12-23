@@ -1,4 +1,6 @@
-FROM node:lts-alpine
+FROM node:16-alpine
+
+RUN apk add --no-cache openssl1.1-compat
 
 # add project files to /app
 ADD ./ /app
